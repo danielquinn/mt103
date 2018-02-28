@@ -24,6 +24,8 @@ you get back a native Python object with the properties you're looking for.
 
 .. code-block:: python
 
+    from mt103 import MT103
+
     mt103 = MT103("some-mt-103-string")
     print("basic header: {}, bank op code: {}, complete message: {}".format(
         mt103.basic_header,
