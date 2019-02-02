@@ -18,16 +18,24 @@ class MT103:
 
     With considerable help from:
     http://www.sepaforcorporates.com/swift-for-corporates/read-swift-message-structure/
+    https://www.sepaforcorporates.com/swift-for-corporates/explained-swift-gpi-uetr-unique-end-to-end-transaction-reference/
     """
 
     MESSAGE_REGEX = re.compile(
-        "^"
-        "({1:(?P<basic_header>[^}]+)})?"
-        "({2:(?P<application_header>I[^}]+)})?"
-        "({3:(?P<user_header>({113:[A-Z]{4}})?({108:[A-Z0-9]{0,16}}))})?"
-        "({4:\s*(?P<text>.+?)\s*-})?"
-        "({5:(?P<trailer>[^}]+)})?"
-        "$",
+        r"^"
+        r"({1:(?P<basic_header>[^}]+)})?"
+        r"({2:(?P<application_header>I[^}]+)})?"
+        r"({3:"
+            r"(?P<user_header>"
+                r"({113:[A-Z]{4}})?"
+                r"({108:[A-Z0-9]{0,16}})?"
+                r"({111:[0-9]{3}})?"
+                r"({121:[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-4[a-zA-Z0-9]{3}-[89ab][a-zA-Z0-9]{3}-[a-zA-Z0-9]{12}})?"  # NOQA: E501
+            r")"
+        r"})?"
+        r"({4:\s*(?P<text>.+?)\s*-})?"
+        r"({5:(?P<trailer>[^}]+)})?"
+        r"$",
         re.DOTALL
     )
 
@@ -71,13 +79,85 @@ class MT103:
 
         self.basic_header = m.group("basic_header")
         self.application_header = m.group("application_header")
-        self.user_header = m.group("user_header")
         self.trailer = m.group("trailer")
 
+        self.user_header = UserHeader(m.group("user_header"))
         self.text = Text(m.group("text") or "")
 
 
-class Text(object):
+class UserHeader:
+    """
+    The user header is sufficiently complicated that we might want to break it
+    up a bit too.
+    """
+
+    REGEX = re.compile(
+        r"^"
+        r"({113:(?P<bpc>[A-Z]{4})})?"
+        r"({108:(?P<mur>[A-Z0-9]{0,16})})?"
+        r"({111:(?P<sti>[0-9]{3})})?"
+        r"({121:(?P<uetr>[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-4[a-zA-Z0-9]{3}-[89ab][a-zA-Z0-9]{3}-[a-zA-Z0-9]{12})})?"  # NOQA: E501
+        r"$"
+    )
+
+    def __init__(self, raw):
+
+        self.raw = raw
+
+        self.bank_priority_code = None
+        self.message_user_reference = None
+        self.service_type_identifier = None
+        self.unique_end_to_end_transaction_reference = None
+
+        self._boolean = False
+
+        self._populate_by_parsing()
+
+    def __str__(self):
+        return self.raw
+
+    def __repr__(self):
+        return str(self)
+
+    def __bool__(self):
+        return self._boolean
+    __nonzero__ = __bool__  # Python 2
+
+    @property
+    def bpc(self):
+        return self.bank_priority_code
+
+    @property
+    def mur(self):
+        return self.message_user_reference
+
+    @property
+    def sti(self):
+        return self.service_type_identifier
+
+    @property
+    def uetr(self):
+        return self.unique_end_to_end_transaction_reference
+
+    def _populate_by_parsing(self):
+
+        if not self.raw:
+            return
+
+        m = self.REGEX.match(self.raw)
+
+        self._boolean = bool(m)
+
+        if not m:
+            return
+
+        self.bank_priority_code = m.group("bpc")
+        self.message_user_reference = m.group("mur")
+        self.service_type_identifier = m.group("sti")
+        self.unique_end_to_end_transaction_reference = m.group("uetr")
+
+
+class Text:
     """
     With considerable help from:
     https://en.wikipedia.org/wiki/MT103 and
@@ -85,32 +165,32 @@ class Text(object):
     """
 
     REGEX = re.compile(
-        "^"
-        "(:20:(?P<transaction_reference>[^\s:]+)\s*)?"
-        "(:23B:(?P<bank_operation_code>[^\s:]+)\s*)?"
-        "(:32A:"
-            "(?P<value_date_year>\d\d)"  # NOQA
-            "(?P<value_date_month>\d\d)"
-            "(?P<value_date_day>\d\d)"
-            "(?P<interbank_settled_currency>[A-Z]{3})"
-            "(?P<interbank_settled_amount>[\d,]+)"
-        "\s*)?"
-        "(:33B:"
-            "(?P<original_ordered_currency>[A-Z]{3})"
-            "(?P<original_ordered_amount>[\d,]+)"
-        "\s*)?"
-        "(:50[AFK]:(?P<ordering_customer>.*?)\s*(?=(:\d\d)?))?"
-        "(:52[AD]:(?P<ordering_institution>.*?)\s*(?=(:\d\d)?))?"
-        "(:53[ABD]:(?P<sender_correspondent>[^\s:]*)\s*)?"
-        "(:54[ABD]:(?P<receiver_correspondent>.*?)\s*(?=(:\d\d)?))?"
-        "(:56[ACD]:(?P<intermediary>.*?)\s*(?=(:\d\d)?))?"
-        "(:57[ABCD]:(?P<account_with_institution>.*?)\s*(?=(:\d\d)?))?"
-        "(:59A?:(?P<beneficiary>.*?)\s*(?=(:\d\d)?))?"
-        "(:70:(?P<remittance_information>.*?)\s*(?=(:\d\d)?))?"
-        "(:71A:(?P<details_of_charges>.*?)\s*(?=(:\d\d)?))?"
-        "(:72:(?P<sender_to_receiver_information>.*?)\s*(?=(:\d\d)?))?"
-        "(:77A:(?P<regulatory_reporting>.*?)\s*(?=(:\d\d)?))?"
-        "$",
+        r"^"
+        r"(:20:(?P<transaction_reference>[^\s:]+)\s*)?"
+        r"(:23B:(?P<bank_operation_code>[^\s:]+)\s*)?"
+        r"(:32A:"
+            r"(?P<value_date_year>\d\d)"  # NOQA
+            r"(?P<value_date_month>\d\d)"
+            r"(?P<value_date_day>\d\d)"
+            r"(?P<interbank_settled_currency>[A-Z]{3})"
+            r"(?P<interbank_settled_amount>[\d,]+)"
+        r"\s*)?"
+        r"(:33B:"
+            r"(?P<original_ordered_currency>[A-Z]{3})"
+            r"(?P<original_ordered_amount>[\d,]+)"
+        r"\s*)?"
+        r"(:50[AFK]:(?P<ordering_customer>.*?)\s*(?=(:\d\d)?))?"
+        r"(:52[AD]:(?P<ordering_institution>.*?)\s*(?=(:\d\d)?))?"
+        r"(:53[ABD]:(?P<sender_correspondent>[^\s:]*)\s*)?"
+        r"(:54[ABD]:(?P<receiver_correspondent>.*?)\s*(?=(:\d\d)?))?"
+        r"(:56[ACD]:(?P<intermediary>.*?)\s*(?=(:\d\d)?))?"
+        r"(:57[ABCD]:(?P<account_with_institution>.*?)\s*(?=(:\d\d)?))?"
+        r"(:59A?:(?P<beneficiary>.*?)\s*(?=(:\d\d)?))?"
+        r"(:70:(?P<remittance_information>.*?)\s*(?=(:\d\d)?))?"
+        r"(:71A:(?P<details_of_charges>.*?)\s*(?=(:\d\d)?))?"
+        r"(:72:(?P<sender_to_receiver_information>.*?)\s*(?=(:\d\d)?))?"
+        r"(:77A:(?P<regulatory_reporting>.*?)\s*(?=(:\d\d)?))?"
+        r"$",
         re.DOTALL
     )
 
