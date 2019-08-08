@@ -20,6 +20,13 @@ MESSAGE3 = (
     "{3:{113:SEPA}{111:001}{121:d2d62e74-4f7d-45dc-a230-85fa259e1694}}"
     "{4: :20:123456-ABCDEF001 :23B:GHIJ :32A:123456GBP10000,00 :33B:GBP10000,00 :50K:/This is arbitrary text :52D:/123456-78900 More arbitrary text :53B:/12345678901234 :57C://AB123456 :59:/12345678 Even more arbitrary text :70:abc - 12.34 more txt 20190115-ABCDEF :71A:SHA :72:/INS/ABCDEF01 -}"  # NOQA: E501
 )
+MESSAGE4 = (
+    "{1:F01AAAAGRA0AXXX0057000289}"
+    "{2:O1030919010321BBBBGRA0AXXX00570001710103210920N}"
+    "{3:{108:MT103 003 OF 045}{121:c8b66b47-2bd9-48fe-be90-93c2096f27d2}}"
+    "{4:\n:20:5387354\n:23B:CRED\n:23E:PHOB/20.527.19.60\n:32A:000526USD1101,50\n:33B:USD1121,50\n:50K:FRANZ HOLZAPFEL GMBH\nVIENNA\n:52A:BKAUATWW\n:59:723491524\nC. KLEIN\nBLOEMENGRACHT 15\nAMSTERDAM\n:71A:SHA\n:71F:USD10,\n:71F:USD10,\n:72:/INS/CHASUS33\n-}"
+    "{5:{MAC:75D138E4}{CHK:DE1B0D71FA96}}"
+)
 
 
 class SwiftMT103TestCase(TestCase):
@@ -74,13 +81,24 @@ class SwiftMT103TestCase(TestCase):
         self.assertEqual(mt103.text.raw, MESSAGE3[120:-3])
         self.assertEqual(mt103.trailer, None)
 
+        mt103 = MT103(MESSAGE4)
+        self.assertTrue(mt103)
+        self.assertEqual(mt103.basic_header, "F01AAAAGRA0AXXX0057000289")
+        self.assertEqual(mt103.application_header, "O1030919010321BBBBGRA0AXXX00570001710103210920N")
+        self.assertEqual(
+            str(mt103.user_header),
+            "{108:MT103 003 OF 045}{121:c8b66b47-2bd9-48fe-be90-93c2096f27d2}"
+        )
+        self.assertEqual(mt103.text.raw, MESSAGE4[152:-39])
+        self.assertEqual(mt103.trailer, "{MAC:75D138E4}{CHK:DE1B0D71FA96}")
+
     def test_truthyness(self):
         self.assertFalse(MT103(""))
         self.assertFalse(MT103("test"))
 
 
 class UserHeaderTestCase(TestCase):
-    
+
     def test___init__(self):
 
         keys = (

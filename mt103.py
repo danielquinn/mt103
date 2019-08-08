@@ -24,17 +24,17 @@ class MT103:
     MESSAGE_REGEX = re.compile(
         r"^"
         r"({1:(?P<basic_header>[^}]+)})?"
-        r"({2:(?P<application_header>I[^}]+)})?"
+        r"({2:(?P<application_header>(I|O)[^}]+)})?"
         r"({3:"
             r"(?P<user_header>"
                 r"({113:[A-Z]{4}})?"
-                r"({108:[A-Z0-9]{0,16}})?"
+                r"({108:[A-Z 0-9]{0,16}})?"
                 r"({111:[0-9]{3}})?"
                 r"({121:[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-4[a-zA-Z0-9]{3}-[89ab][a-zA-Z0-9]{3}-[a-zA-Z0-9]{12}})?"  # NOQA: E501
             r")"
         r"})?"
         r"({4:\s*(?P<text>.+?)\s*-})?"
-        r"({5:(?P<trailer>[^}]+)})?"
+        r"({5:(?P<trailer>.+)})?"
         r"$",
         re.DOTALL
     )

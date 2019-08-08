@@ -18,7 +18,7 @@ DESCRIPTION = "Parse MT103 messages from the Swift payments network"
 URL = "https://github.com/danielquinn/mt103"
 EMAIL = "code@danielquinn.org"
 AUTHOR = "Daniel Quinn"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
