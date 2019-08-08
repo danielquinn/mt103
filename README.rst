@@ -29,7 +29,7 @@ you get back a native Python object with the properties you're looking for.
     mt103 = MT103("some-mt-103-string")
     print("basic header: {}, bank op code: {}, complete message: {}".format(
         mt103.basic_header,
-        mt103.text.bank_operation_code
+        mt103.text.bank_operation_code,
         mt103
     ))
 
