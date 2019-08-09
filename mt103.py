@@ -160,8 +160,7 @@ class UserHeader:
 class Text:
     """
     With considerable help from:
-    https://en.wikipedia.org/wiki/MT103 and
-    https://gist.github.com/dmcruz/9940a6b217ff701b8f3e
+      https://gist.github.com/dmcruz/9940a6b217ff701b8f3e
     """
 
     REGEX = re.compile(
