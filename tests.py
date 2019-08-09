@@ -6,7 +6,7 @@ from mt103 import MT103, Text, UserHeader
 MESSAGE1 = (
     "{1:F01ASDFJK20AXXX0987654321}"
     "{2:I103ASDFJK22XXXXN}"
-    "{4: :20:20180101-ABCDEF :23B:GHIJ :32A:180117CAD5432,1 :33B:EUR9999,0 :50K:/123456-75901 SOMEWHERE New York 999999 GR :53B:/20100213012345 :57C://SC200123 :59:/201001020 First Name Last Name a12345bc6d789ef01a23 Nowhere NL :70:test reference test reason payment group: 1234567-ABCDEF :71A:SHA :77A:Test this -}"  # NOQA: E501
+    "{4: :20:20180101-ABCDEF :23B:GHIJ :32A:180117CAD5432,1 :33B:EUR9999,0 :50K:/123456-75901 SOMEWHERE New York 999999 GR :53B:/20100213012345 :57C://SC200123 :59:/201001020 First Name Last Name a12345bc6d789ef01a23 Nowhere NL :70:test reference test reason payment group: 1234567-ABCDEF :71A:SHA :77B:Test this -}"  # NOQA: E501
 )
 MESSAGE2 = (
     "{1:F01QWERTY22AXXX1234567890}"
@@ -50,7 +50,7 @@ class SwiftMT103TestCase(TestCase):
             self.assertIsNone(getattr(mt103, key))
             self.assertEqual(mt103.raw, "test")
 
-    def test__populate_by_parsing(self):
+    def test__populate_by_parsing_message1(self):
 
         mt103 = MT103(MESSAGE1)
 
@@ -62,6 +62,8 @@ class SwiftMT103TestCase(TestCase):
 
         self.assertEqual(str(mt103.text), MESSAGE1[54:-3])
 
+    def test__populate_by_parsing_message2(self):
+
         mt103 = MT103(MESSAGE2)
         self.assertTrue(mt103)
         self.assertEqual(mt103.basic_header, "F01QWERTY22AXXX1234567890")
@@ -69,6 +71,8 @@ class SwiftMT103TestCase(TestCase):
         self.assertEqual(str(mt103.user_header), "{108:MT103}")
         self.assertEqual(mt103.text.raw, MESSAGE2[70:-3])
         self.assertEqual(mt103.trailer, None)
+
+    def test__populate_by_parsing_message3(self):
 
         mt103 = MT103(MESSAGE3)
         self.assertTrue(mt103)
@@ -80,6 +84,8 @@ class SwiftMT103TestCase(TestCase):
         )
         self.assertEqual(mt103.text.raw, MESSAGE3[120:-3])
         self.assertEqual(mt103.trailer, None)
+
+    def test__populate_by_parsing_message4(self):
 
         mt103 = MT103(MESSAGE4)
         self.assertTrue(mt103)
@@ -188,7 +194,7 @@ class TextTestCase(TestCase):
             self.assertIsNone(getattr(text, key))
             self.assertEqual(text.raw, "test")
 
-    def test__populate_by_parsing(self):
+    def test__populate_by_parsing_message1(self):
 
         mt103 = MT103(MESSAGE1)
 
@@ -221,6 +227,40 @@ class TextTestCase(TestCase):
         self.assertEqual(mt103.text.interbank_settled_amount, "5432,1")
         self.assertEqual(mt103.text.ordering_institution, None)
         self.assertEqual(mt103.text.account_with_institution, "//SC200123")
+
+    def test__populate_by_parsing_message4(self):
+
+        mt103 = MT103(MESSAGE4)
+
+        self.assertTrue(mt103)
+        self.assertTrue(mt103.text)
+        self.assertEqual(mt103.text.transaction_reference, "5387354")
+        self.assertEqual(mt103.text.interbank_settled_currency, "USD")
+        self.assertEqual(mt103.text.original_ordered_currency, "USD")
+        self.assertEqual(mt103.text.bank_operation_code, "CRED")
+        self.assertEqual(mt103.text.date, date(2000, 5, 26))
+        self.assertEqual(
+            mt103.text.ordering_customer,
+            "FRANZ HOLZAPFEL GMBH\nVIENNA"
+        )
+        self.assertIsNone(mt103.text.regulatory_reporting)
+        self.assertEqual(
+            mt103.text.sender_to_receiver_information,
+            "/INS/CHASUS33"
+        )
+        self.assertEqual(mt103.text.original_ordered_amount, "1121,50")
+        self.assertEqual(
+            mt103.text.beneficiary,
+            "723491524\nC. KLEIN\nBLOEMENGRACHT 15\nAMSTERDAM"
+        )
+        self.assertIsNone(mt103.text.remittance_information)
+        self.assertEqual(mt103.text.details_of_charges, "SHA")
+        self.assertIsNone(mt103.text.sender_correspondent)
+        self.assertIsNone(mt103.text.intermediary)
+        self.assertEqual(mt103.text.receiver_correspondent, None)
+        self.assertEqual(mt103.text.interbank_settled_amount, "1101,50")
+        self.assertEqual(mt103.text.ordering_institution, "BKAUATWW")
+        self.assertIsNone(mt103.text.account_with_institution)
 
     def test_truthyness(self):
         self.assertFalse(Text(""))

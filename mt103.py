@@ -166,11 +166,19 @@ class Text:
     REGEX = re.compile(
         r"^"
         r"(:20:(?P<transaction_reference>[^\s:]+)\s*)?"
+        r"(:13C:/"
+          r"(?P<time_indication_class>(CLSTIME|RNCTIME|SNDTIME))/"
+          r"(?P<time_indication_time>[\d]{4})"
+          r"(?P<time_indication_sign>[+-])"
+          r"(?P<time_indication_offset>\d{4})[^:]*"
+        r")*?"
         r"(:23B:(?P<bank_operation_code>[^\s:]+)\s*)?"
+        r"(:23E:(?P<instruction_code>[^:]*))?"
+        r"(:26T:(?P<transaction_type_code>[^:]*))?"
         r"(:32A:"
-            r"(?P<value_date_year>\d\d)"  # NOQA
-            r"(?P<value_date_month>\d\d)"
-            r"(?P<value_date_day>\d\d)"
+            r"(?P<date_year>\d\d)"
+            r"(?P<date_month>\d\d)"
+            r"(?P<date_day>\d\d)"
             r"(?P<interbank_settled_currency>[A-Z]{3})"
             r"(?P<interbank_settled_amount>[\d,]+)"
         r"\s*)?"
@@ -178,7 +186,9 @@ class Text:
             r"(?P<original_ordered_currency>[A-Z]{3})"
             r"(?P<original_ordered_amount>[\d,]+)"
         r"\s*)?"
+        r"(:36:(?P<exchange_rate>[^:]*))?"
         r"(:50[AFK]:(?P<ordering_customer>.*?)\s*(?=(:\d\d)?))?"
+        r"(:51A:(?P<sending_institution>[^:]*))?"
         r"(:52[AD]:(?P<ordering_institution>.*?)\s*(?=(:\d\d)?))?"
         r"(:53[ABD]:(?P<sender_correspondent>[^\s:]*)\s*)?"
         r"(:54[ABD]:(?P<receiver_correspondent>.*?)\s*(?=(:\d\d)?))?"
@@ -187,11 +197,13 @@ class Text:
         r"(:59A?:(?P<beneficiary>.*?)\s*(?=(:\d\d)?))?"
         r"(:70:(?P<remittance_information>.*?)\s*(?=(:\d\d)?))?"
         r"(:71A:(?P<details_of_charges>.*?)\s*(?=(:\d\d)?))?"
+        r"(:71F:(?P<sender_charges>[^:]*))*"
+        r"(:71G:(?P<receiver_charges>[^:]*))?"
         r"(:72:(?P<sender_to_receiver_information>.*?)\s*(?=(:\d\d)?))?"
-        r"(:77A:(?P<regulatory_reporting>.*?)\s*(?=(:\d\d)?))?"
+        r"(:77B:(?P<regulatory_reporting>.*?)\s*(?=(:\d\d)?))?"
         r"$",
         re.DOTALL
-    )
+    )  # NOQA
 
     def __init__(self, raw):
 
@@ -199,11 +211,15 @@ class Text:
 
         self.transaction_reference = None
         self.bank_operation_code = None
+        self.instruction_code = None
+        self.transaction_type_code = None
         self.interbank_settled_currency = None
         self.interbank_settled_amount = None
         self.original_ordered_currency = None
         self.original_ordered_amount = None
+        self.exchange_rate = None
         self.ordering_customer = None
+        self.sending_institution = None
         self.ordering_institution = None
         self.sender_correspondent = None
         self.receiver_correspondent = None
@@ -212,8 +228,11 @@ class Text:
         self.beneficiary = None
         self.remittance_information = None
         self.details_of_charges = None
+        self.sender_charges = None
+        self.receiver_charges = None
         self.sender_to_receiver_information = None
         self.regulatory_reporting = None
+
         self.date = None
 
         self._boolean = False
@@ -245,15 +264,17 @@ class Text:
         for k, v in m.groupdict().items():
             if v is None:
                 continue
-            if k.startswith("value_date_"):
+            if k.startswith("date_"):
+                continue
+            if not hasattr(self, k):
                 continue
             setattr(self, k, v)
 
         try:
             self.date = date(
-                2000 + int(m.group("value_date_year")),
-                int(m.group("value_date_month")),
-                int(m.group("value_date_day"))
+                2000 + int(m.group("date_year")),
+                int(m.group("date_month")),
+                int(m.group("date_day"))
             )
         except (ValueError, TypeError):
             pass  # Defaults to None

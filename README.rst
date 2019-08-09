@@ -42,3 +42,14 @@ It's on PyPi, so just install it with pip.
 .. code-block:: shell
 
     $ pip install mt103
+
+
+TODO
+----
+
+Parsing MT103 messages should work just fine and you should be able to access
+all of the components via the Python API *except* for section ``13C``.  From
+the specs I've seen, it's unclear as to whether this section is permitted to
+repeat (meaning it should be parsed as a list) or if it's one value only.  If
+someone can explain this authoritatively to me, I can include support for this
+section as well.

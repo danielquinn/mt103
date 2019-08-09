@@ -1,11 +1,25 @@
 # Changelog
 
+## 1.1.0
+
+* Added support for a few more portions of the `text` section:
+
+    * instruction_code
+    * transaction_type_code
+    * exchange_rate
+    * sending_institution
+    * sender_charges
+    * receiver_charges
+
+  Big thanks to [Broto](https://github.com/bbroto06) again for reporting the
+  problem.
+
 
 ## 1.0.1
 
-Bugfix [#3](https://github.com/danielquinn/mt103/issues/3): account for
+* Bugfix [#3](https://github.com/danielquinn/mt103/issues/3): account for
 application headers for outgoing messages, MUR values containing spaces, and
-trailer sections containing `{}`.  Thanks to [@bbroto06](https://github.com/bbroto06)
+trailer sections containing `{}`.  Thanks to [Broto Bhattacharjee](https://github.com/bbroto06)
 for the report!
 
 
