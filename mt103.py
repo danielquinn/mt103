@@ -1,4 +1,5 @@
 import re
+
 from datetime import date
 
 
@@ -21,6 +22,7 @@ class MT103:
     https://www.sepaforcorporates.com/swift-for-corporates/explained-swift-gpi-uetr-unique-end-to-end-transaction-reference/
     """
 
+    # fmt: off
     MESSAGE_REGEX = re.compile(
         r"^"
         r"({1:(?P<basic_header>[^}]+)})?"
@@ -36,8 +38,9 @@ class MT103:
         r"({4:\s*(?P<text>.+?)\s*-})?"
         r"({5:(?P<trailer>.+)})?"
         r"$",
-        re.DOTALL
+        re.DOTALL,
     )
+    # fmt: on
 
     def __init__(self, message):
 
@@ -63,6 +66,7 @@ class MT103:
 
     def __bool__(self):
         return self._boolean
+
     __nonzero__ = __bool__  # Python 2
 
     def _populate_by_parsing(self):
@@ -121,6 +125,7 @@ class UserHeader:
 
     def __bool__(self):
         return self._boolean
+
     __nonzero__ = __bool__  # Python 2
 
     @property
@@ -163,6 +168,7 @@ class Text:
       https://gist.github.com/dmcruz/9940a6b217ff701b8f3e
     """
 
+    # fmt: off
     REGEX = re.compile(
         r"^"
         r"(:20:(?P<transaction_reference>[^\s:]+)\s*)?"
@@ -202,8 +208,9 @@ class Text:
         r"(:72:(?P<sender_to_receiver_information>.*?)\s*(?=(:\d\d)?))?"
         r"(:77B:(?P<regulatory_reporting>.*?)\s*(?=(:\d\d)?))?"
         r"$",
-        re.DOTALL
-    )  # NOQA
+        re.DOTALL,
+    )
+    # fmt: on
 
     def __init__(self, raw):
 
@@ -247,6 +254,7 @@ class Text:
 
     def __bool__(self):
         return self._boolean
+
     __nonzero__ = __bool__  # Python 2
 
     def _populate_by_parsing(self):
@@ -274,7 +282,7 @@ class Text:
             self.date = date(
                 2000 + int(m.group("date_year")),
                 int(m.group("date_month")),
-                int(m.group("date_day"))
+                int(m.group("date_day")),
             )
         except (ValueError, TypeError):
             pass  # Defaults to None
