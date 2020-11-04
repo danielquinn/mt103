@@ -85,7 +85,7 @@ class MT103:
         self.application_header = m.group("application_header")
         self.trailer = m.group("trailer")
 
-        self.user_header = UserHeader(m.group("user_header"))
+        self.user_header = UserHeader(m.group("user_header") or "")
         self.text = Text(m.group("text") or "")
 
 

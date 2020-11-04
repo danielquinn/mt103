@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mt103"
-version = "1.1.0"
+version = "1.1.1"
 readme = "README.rst"
 homepage = "https://github.com/danielquinn/mt103"
 repository = "https://github.com/danielquinn/mt103"

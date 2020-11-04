@@ -1,7 +1,10 @@
+import unittest
+
 from datetime import date
-from unittest import TestCase, mock
+from unittest import mock
 
 from mt103 import MT103, Text, UserHeader
+
 
 MESSAGE1 = (
     "{1:F01ASDFJK20AXXX0987654321}"
@@ -29,8 +32,7 @@ MESSAGE4 = (
 )
 
 
-class SwiftMT103TestCase(TestCase):
-
+class SwiftMT103TestCase(unittest.TestCase):
     def test___init__(self):
 
         keys = (
@@ -80,7 +82,7 @@ class SwiftMT103TestCase(TestCase):
         self.assertEqual(mt103.application_header, "I103QWERTY33XXXXA7")
         self.assertEqual(
             str(mt103.user_header),
-            "{113:SEPA}{111:001}{121:d2d62e74-4f7d-45dc-a230-85fa259e1694}"
+            "{113:SEPA}{111:001}{121:d2d62e74-4f7d-45dc-a230-85fa259e1694}",
         )
         self.assertEqual(mt103.text.raw, MESSAGE3[120:-3])
         self.assertEqual(mt103.trailer, None)
@@ -90,10 +92,13 @@ class SwiftMT103TestCase(TestCase):
         mt103 = MT103(MESSAGE4)
         self.assertTrue(mt103)
         self.assertEqual(mt103.basic_header, "F01AAAAGRA0AXXX0057000289")
-        self.assertEqual(mt103.application_header, "O1030919010321BBBBGRA0AXXX00570001710103210920N")
+        self.assertEqual(
+            mt103.application_header,
+            "O1030919010321BBBBGRA0AXXX00570001710103210920N",
+        )
         self.assertEqual(
             str(mt103.user_header),
-            "{108:MT103 003 OF 045}{121:c8b66b47-2bd9-48fe-be90-93c2096f27d2}"
+            "{108:MT103 003 OF 045}{121:c8b66b47-2bd9-48fe-be90-93c2096f27d2}",
         )
         self.assertEqual(mt103.text.raw, MESSAGE4[152:-39])
         self.assertEqual(mt103.trailer, "{MAC:75D138E4}{CHK:DE1B0D71FA96}")
@@ -102,9 +107,14 @@ class SwiftMT103TestCase(TestCase):
         self.assertFalse(MT103(""))
         self.assertFalse(MT103("test"))
 
+    def test___str__(self):
+        self.assertEqual(str(MT103(MESSAGE1)), MESSAGE1)
+        self.assertEqual(str(MT103(MESSAGE2)), MESSAGE2)
+        self.assertEqual(str(MT103(MESSAGE3)), MESSAGE3)
+        self.assertEqual(str(MT103(MESSAGE4)), MESSAGE4)
 
-class UserHeaderTestCase(TestCase):
 
+class UserHeaderTestCase(unittest.TestCase):
     def test___init__(self):
 
         keys = (
@@ -138,7 +148,9 @@ class UserHeaderTestCase(TestCase):
         self.assertEqual(mt103.user_header.mur, "MT103")
         self.assertIsNone(mt103.user_header.service_type_identifier)
         self.assertIsNone(mt103.user_header.sti)
-        self.assertIsNone(mt103.user_header.unique_end_to_end_transaction_reference)  # NOQA: E501
+        self.assertIsNone(
+            mt103.user_header.unique_end_to_end_transaction_reference
+        )  # NOQA: E501
         self.assertIsNone(mt103.user_header.uetr)
 
         mt103 = MT103(MESSAGE3)
@@ -152,16 +164,14 @@ class UserHeaderTestCase(TestCase):
         self.assertEqual(mt103.user_header.sti, "001")
         self.assertEqual(
             "d2d62e74-4f7d-45dc-a230-85fa259e1694",
-            mt103.user_header.unique_end_to_end_transaction_reference
+            mt103.user_header.unique_end_to_end_transaction_reference,
         )
         self.assertEqual(
-            "d2d62e74-4f7d-45dc-a230-85fa259e1694",
-            mt103.user_header.uetr
+            "d2d62e74-4f7d-45dc-a230-85fa259e1694", mt103.user_header.uetr
         )
 
 
-class TextTestCase(TestCase):
-
+class TextTestCase(unittest.TestCase):
     def test___init__(self):
 
         keys = (
@@ -207,18 +217,18 @@ class TextTestCase(TestCase):
         self.assertEqual(mt103.text.date, date(2018, 1, 17))
         self.assertEqual(
             mt103.text.ordering_customer,
-            "/123456-75901 SOMEWHERE New York 999999 GR"
+            "/123456-75901 SOMEWHERE New York 999999 GR",
         )
         self.assertEqual(mt103.text.regulatory_reporting, "Test this")
         self.assertEqual(mt103.text.sender_to_receiver_information, None)
         self.assertEqual(mt103.text.original_ordered_amount, "9999,0")
         self.assertEqual(
             mt103.text.beneficiary,
-            "/201001020 First Name Last Name a12345bc6d789ef01a23 Nowhere NL"
+            "/201001020 First Name Last Name a12345bc6d789ef01a23 Nowhere NL",
         )
         self.assertEqual(
             mt103.text.remittance_information,
-            "test reference test reason payment group: 1234567-ABCDEF"
+            "test reference test reason payment group: 1234567-ABCDEF",
         )
         self.assertEqual(mt103.text.details_of_charges, "SHA")
         self.assertEqual(mt103.text.sender_correspondent, "/20100213012345")
@@ -240,18 +250,16 @@ class TextTestCase(TestCase):
         self.assertEqual(mt103.text.bank_operation_code, "CRED")
         self.assertEqual(mt103.text.date, date(2000, 5, 26))
         self.assertEqual(
-            mt103.text.ordering_customer,
-            "FRANZ HOLZAPFEL GMBH\nVIENNA"
+            mt103.text.ordering_customer, "FRANZ HOLZAPFEL GMBH\nVIENNA"
         )
         self.assertIsNone(mt103.text.regulatory_reporting)
         self.assertEqual(
-            mt103.text.sender_to_receiver_information,
-            "/INS/CHASUS33"
+            mt103.text.sender_to_receiver_information, "/INS/CHASUS33"
         )
         self.assertEqual(mt103.text.original_ordered_amount, "1121,50")
         self.assertEqual(
             mt103.text.beneficiary,
-            "723491524\nC. KLEIN\nBLOEMENGRACHT 15\nAMSTERDAM"
+            "723491524\nC. KLEIN\nBLOEMENGRACHT 15\nAMSTERDAM",
         )
         self.assertIsNone(mt103.text.remittance_information)
         self.assertEqual(mt103.text.details_of_charges, "SHA")
@@ -268,3 +276,7 @@ class TextTestCase(TestCase):
         self.assertFalse(MT103("").text)
         self.assertFalse(MT103("test").text)
         self.assertTrue(MT103(MESSAGE1).text)
+
+
+if __name__ == "__main__":
+    unittest.main()
